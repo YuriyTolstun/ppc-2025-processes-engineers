@@ -1,7 +1,7 @@
 #pragma once
 
-#include "tolstun_y_buk_string_count/common/include/common.hpp"
 #include "task/include/task.hpp"
+#include "tolstun_y_buk_string_count/common/include/common.hpp"
 
 namespace tolstun_y_buk_string_count {
 

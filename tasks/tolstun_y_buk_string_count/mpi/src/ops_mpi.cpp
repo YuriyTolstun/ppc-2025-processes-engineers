@@ -10,49 +10,40 @@
 
 namespace tolstun_y_buk_string_count {
 
-TolstunYBukStringCountMPI::TolstunYBukStringCountMPI(const InType &in)
-{
+TolstunYBukStringCountMPI::TolstunYBukStringCountMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;
 }
 
-bool TolstunYBukStringCountMPI::ValidationImpl() 
-{
+bool TolstunYBukStringCountMPI::ValidationImpl() {
   return GetOutput() == 0;
 }
 
-bool TolstunYBukStringCountMPI::PreProcessingImpl() 
-{
+bool TolstunYBukStringCountMPI::PreProcessingImpl() {
   GetOutput() = 0;
   return true;
 }
 
-//Изолируем
-namespace 
-{
+// Изолируем
+namespace {
 
-  int CountBukv(const std::string &s, std::size_t start, std::size_t end) 
-  {
-    
-    //Считаем количество букв
-    int bukvCount=0;
-    for(std::size_t i = start; i < end; ++i)
-    {
-      auto sim = static_cast<unsigned char>(s[i]);
-      if(std::isalpha(sim))
-      {
-        ++bukvCount;
-      }
+int CountBukv(const std::string &s, std::size_t start, std::size_t end) {
+  // Считаем количество букв
+  int bukvCount = 0;
+  for (std::size_t i = start; i < end; ++i) {
+    auto sim = static_cast<unsigned char>(s[i]);
+    if (std::isalpha(sim)) {
+      ++bukvCount;
     }
-
-    return bukvCount;
   }
 
-} 
+  return bukvCount;
+}
 
-bool TolstunYBukStringCountMPI::RunImpl() 
-{
+}  // namespace
+
+bool TolstunYBukStringCountMPI::RunImpl() {
   const std::string &stroka = GetInput();
   const std::size_t sizeStroka = stroka.size();
 
@@ -61,33 +52,30 @@ bool TolstunYBukStringCountMPI::RunImpl()
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  if (sizeStroka == 0) 
-  {
+  if (sizeStroka == 0) {
     GetOutput() = 0;
     MPI_Barrier(MPI_COMM_WORLD);
     return true;
   }
 
-  
   std::size_t interval = sizeStroka / static_cast<std::size_t>(size);
   std::size_t ostatok = sizeStroka % static_cast<std::size_t>(size);
 
   std::size_t start = rank * interval + std::min(static_cast<std::size_t>(rank), ostatok);
-  
+
   std::size_t end = start + interval;
-  if (static_cast<std::size_t>(rank) < ostatok)
-  {
+  if (static_cast<std::size_t>(rank) < ostatok) {
     end += 1;
   }
 
   start = std::min(start, sizeStroka);
   end = std::min(end, sizeStroka);
-  
-  start = std::min(start, end); // защита от пересечения
+
+  start = std::min(start, end);  // защита от пересечения
 
   int localCount = 0;
   if (start < end) {
-      localCount = CountBukv(stroka, start, end);
+    localCount = CountBukv(stroka, start, end);
   }
 
   int globalCount = 0;
@@ -102,8 +90,7 @@ bool TolstunYBukStringCountMPI::RunImpl()
   return true;
 }
 
-bool TolstunYBukStringCountMPI::PostProcessingImpl() 
-{
+bool TolstunYBukStringCountMPI::PostProcessingImpl() {
   return GetOutput() >= 0;
 }
 
