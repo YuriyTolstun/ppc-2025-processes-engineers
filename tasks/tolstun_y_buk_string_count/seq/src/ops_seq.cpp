@@ -1,11 +1,9 @@
 #include "tolstun_y_buk_string_count/seq/include/ops_seq.hpp"
 
-#include <numeric>
-#include <vector>
+#include <cctype>
+#include <string>
 
 #include "tolstun_y_buk_string_count/common/include/common.hpp"
-#include "util/include/util.hpp"
-
 namespace tolstun_y_buk_string_count {
 
 TolstunYBukStringCountSEQ::TolstunYBukStringCountSEQ(const InType &in) {
@@ -27,14 +25,14 @@ bool TolstunYBukStringCountSEQ::RunImpl() {
   const std::string &stroka = GetInput();
 
   // Считаем количество букв
-  int bukvCount = 0;
+  int bukv_count = 0;
   for (char sim : stroka) {
-    if (std::isalpha(sim)) {
-      bukvCount++;
+    if (std::isalpha(sim) != 0) {
+      bukv_count++;
     }
   }
 
-  GetOutput() = bukvCount;
+  GetOutput() = bukv_count;
   return true;
 }
 

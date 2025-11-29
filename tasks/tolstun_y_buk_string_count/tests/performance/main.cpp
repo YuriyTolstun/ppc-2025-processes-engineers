@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
 
+#include <cstddef>
+#include <string>
+
 #include "tolstun_y_buk_string_count/common/include/common.hpp"
 #include "tolstun_y_buk_string_count/mpi/include/ops_mpi.hpp"
 #include "tolstun_y_buk_string_count/seq/include/ops_seq.hpp"
@@ -12,10 +15,10 @@ class TolstunYRunPerfTest : public ppc::util::BaseRunPerfTests<InType, OutType> 
   OutType expected_output_{};
 
   void SetUp() override {
-    const size_t bukvCount = 50'000'000;
-    std::string stroka(bukvCount, 'a');
+    const size_t bukv_count = 50'000'000;
+    std::string stroka(bukv_count, 'a');
     input_data_ = stroka;
-    expected_output_ = bukvCount;
+    expected_output_ = bukv_count;
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
