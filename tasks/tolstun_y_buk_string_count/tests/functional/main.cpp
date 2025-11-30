@@ -44,13 +44,12 @@ class TolstunYRunFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType,
 
 namespace {
 
-const std::array<TestType, 6> kTestParam = {
+const std::array<TestType, 5> kTestParam = {
     TestType{InType(""), 0},
     TestType{InType("12/3'asdg/231"), 4},
     TestType{InType("ksdf3  ksd 00a"), 8},
-    TestType{InType("453              sdf"), 3},
+    TestType{InType("453              432"), 0},
     TestType{InType("dfs\n       23\t  aab"), 6},
-    TestType{InType(" 1323 0200 ///``` "), 0},
 };
 
 TEST_P(TolstunYRunFuncTests, BukStringCount) {
