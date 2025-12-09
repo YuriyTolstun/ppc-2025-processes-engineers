@@ -2,6 +2,8 @@
 
 #include <mpi.h>
 
+#include <algorithm>
+#include <utility>
 #include <cctype>
 #include <cstddef>
 #include <string>
