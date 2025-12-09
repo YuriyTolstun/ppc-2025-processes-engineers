@@ -46,19 +46,34 @@ int CountBukv(const std::string &s, std::size_t start, std::size_t end) {
 }  // namespace
 
 bool TolstunYBukStringCountMPI::RunImpl() {
-  const std::string &stroka = GetInput();
-  const std::size_t size_stroka = stroka.size();
 
   int rank = 0;
   int size = 1;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
+  std::string stroka;
+  std::size_t size_stroka = 0;
+
+  if (rank == 0) {
+    stroka = GetInput();
+    size_stroka = stroka.size();
+  }
+
+  // Рассылаем размер строки
+  MPI_Bcast(&size_stroka, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD);
+
   if (size_stroka == 0) {
     GetOutput() = 0;
     MPI_Barrier(MPI_COMM_WORLD);
     return true;
   }
+
+  // Выделяем память на всех рангах и рассылаем строку
+  if (rank != 0) {
+    stroka.resize(size_stroka);
+  }
+  MPI_Bcast(const_cast<char*>(stroka.data()), static_cast<int>(size_stroka), MPI_CHAR, 0, MPI_COMM_WORLD);
 
   std::size_t interval = size_stroka / static_cast<std::size_t>(size);
   std::size_t ostatok = size_stroka % static_cast<std::size_t>(size);

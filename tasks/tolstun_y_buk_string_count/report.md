@@ -32,12 +32,16 @@ bool TolstunYBukStringCountSEQ::RunImpl() {
 
 ## 4. Схема параллелизации
 ### Распределение данных
-В начале мы разбиваем строку на равные интервалы и определяем остаток:
+Строка изначально доступна только на корневом процессе (rank == 0). Для равномерного распределения нагрузки строка делится на части, которые обрабатываются параллельно разными процессами.
+
+Сначала вычисляется базовый размер интервала:
 
 std::size_t interval = size_stroka / static_cast<std::size_t>(size);
 std::size_t ostatok = size_stroka % static_cast<std::size_t>(size);
 
-Затем первым osatok процессам мы даем больше на 1 символ, чтобы между ними одинаково распределить остаток. Остальные процессы будут обрабатывать части строки равные interval.
+где interval — минимальный объём данных на процесс, а ostatok — количество "лишних" символов, которые нужно распределить по одному дополнительному символу среди первых ostatok процессов.
+
+Начало и конец участка строки для каждого процесса определяется следующим образом:
 
 td::size_t start = (rank * interval) + std::min(static_cast<std::size_t>(rank), ostatok);
 
@@ -46,7 +50,14 @@ if (std::cmp_less(rank, static_cast<int>(ostatok))) {
   end += 1;
 }
 ### Коммуникация и роли рангов
-Все процессы получают входные данные через GetInput(). Результаты локальной обработки всех процессов суммируются с помощью MPI_Reduce и операцией MPI_SUM на корневом процессе с рангом = 0. Итоговый результат рассылается всем процессам через MPI_Bcast. В конце выполняется синхронизация MPI_Barrier для завершения.
+-Только процесс с rank == 0 вызывает GetInput() для получения исходной строки.
+-Размер строки (size_stroka) рассылается всем процессам через MPI_Bcast.
+-Если строка непустая, сама строка передаётся всем процессам с помощью MPI_Bcast после предварительного выделения памяти на каждом процессе (resize).
+-После этого все процессы имеют полную копию строки и могут безопасно работать со своим выделенным участком (start, end).
+-Каждый процесс вычисляет локальное количество букв в своём диапазоне.
+-Локальные результаты суммируются на корневом процессе (rank == 0) с помощью MPI_Reduce и операции MPI_SUM.
+-Итоговый результат рассылается всем процессам через MPI_Bcast.
+-В конце выполняется синхронизация MPI_Barrier для завершения.
 
 ## 5. Детали реализации
 ### Структура кода
@@ -144,19 +155,34 @@ bool TolstunYBukStringCountSEQ::RunImpl() {
 }
 ### Параллельная версия
 bool TolstunYBukStringCountMPI::RunImpl() {
-  const std::string &stroka = GetInput();
-  const std::size_t size_stroka = stroka.size();
 
   int rank = 0;
   int size = 1;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
+  std::string stroka;
+  std::size_t size_stroka = 0;
+
+  if (rank == 0) {
+    stroka = GetInput();
+    size_stroka = stroka.size();
+  }
+
+  // Рассылаем размер строки
+  MPI_Bcast(&size_stroka, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD);
+
   if (size_stroka == 0) {
     GetOutput() = 0;
     MPI_Barrier(MPI_COMM_WORLD);
     return true;
   }
+
+  // Выделяем память на всех рангах и рассылаем строку
+  if (rank != 0) {
+    stroka.resize(size_stroka);
+  }
+  MPI_Bcast(const_cast<char*>(stroka.data()), static_cast<int>(size_stroka), MPI_CHAR, 0, MPI_COMM_WORLD);
 
   std::size_t interval = size_stroka / static_cast<std::size_t>(size);
   std::size_t ostatok = size_stroka % static_cast<std::size_t>(size);
