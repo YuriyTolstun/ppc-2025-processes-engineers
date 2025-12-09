@@ -2,11 +2,9 @@
 
 #include <mpi.h>
 
-#include <algorithm>
 #include <cctype>
 #include <cstddef>
 #include <string>
-#include <utility>
 
 #include "tolstun_y_buk_string_count/common/include/common.hpp"
 
@@ -46,7 +44,6 @@ int CountBukv(const std::string &s, std::size_t start, std::size_t end) {
 }  // namespace
 
 bool TolstunYBukStringCountMPI::RunImpl() {
-
   int rank = 0;
   int size = 1;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -73,7 +70,7 @@ bool TolstunYBukStringCountMPI::RunImpl() {
   if (rank != 0) {
     stroka.resize(size_stroka);
   }
-  MPI_Bcast(const_cast<char*>(stroka.data()), static_cast<int>(size_stroka), MPI_CHAR, 0, MPI_COMM_WORLD);
+  MPI_Bcast(const_cast<char *>(stroka.data()), static_cast<int>(size_stroka), MPI_CHAR, 0, MPI_COMM_WORLD);
 
   std::size_t interval = size_stroka / static_cast<std::size_t>(size);
   std::size_t ostatok = size_stroka % static_cast<std::size_t>(size);
