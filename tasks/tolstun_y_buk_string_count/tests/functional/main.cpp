@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 #include <stb/stb_image.h>
 
+#include <array>
+#include <cstddef>
 #include <string>
 #include <tuple>
-#include <cstddef>
-#include <array> 
 
 #include "tolstun_y_buk_string_count/common/include/common.hpp"
 #include "tolstun_y_buk_string_count/mpi/include/ops_mpi.hpp"

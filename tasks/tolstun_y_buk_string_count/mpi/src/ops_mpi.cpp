@@ -3,10 +3,10 @@
 #include <mpi.h>
 
 #include <algorithm>
-#include <utility>
 #include <cctype>
 #include <cstddef>
 #include <string>
+#include <utility>
 
 #include "tolstun_y_buk_string_count/common/include/common.hpp"
 
